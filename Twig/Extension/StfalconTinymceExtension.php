@@ -4,6 +4,7 @@ namespace Stfalcon\Bundle\TinymceBundle\Twig\Extension;
 
 use Stfalcon\Bundle\TinymceBundle\Helper\LocaleHelper;
 use Symfony\Component\Asset\Packages;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 use Twig\Environment as TwigEnvironment;
@@ -28,6 +29,7 @@ class StfalconTinymceExtension extends AbstractExtension
         protected TwigEnvironment $twig,
         private Packages $packages,
         protected array $config,
+        private RequestStack $requestStack,
     ) {
         $this->twig     = $twig;
         $this->packages = $packages;
@@ -102,10 +104,10 @@ class StfalconTinymceExtension extends AbstractExtension
         // If the language is not set in the config...
         if (!isset($config['language']) || empty($config['language'])) {
             // get it from the request
-            $config['language'] = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+            $config['language'] = $this->requestStack->getCurrentRequest()?->getLocale();
         }
 
-        $config['language'] = LocaleHelper::getLanguage($config['language']);
+        $config['language'] = LocaleHelper::getLanguage($config['language'] ?? null);
 
         $langDirectory = __DIR__ . '/../../Resources/public/vendor/tinymce/langs/';
 
