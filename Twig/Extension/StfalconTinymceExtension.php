@@ -4,10 +4,9 @@ namespace Stfalcon\Bundle\TinymceBundle\Twig\Extension;
 
 use Stfalcon\Bundle\TinymceBundle\Helper\LocaleHelper;
 use Symfony\Component\Asset\Packages;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
-use Twig\Environment;
+use Twig\Environment as TwigEnvironment;
 
 /**
  * StfalconTinymceExtension.
@@ -17,13 +16,6 @@ use Twig\Environment;
 class StfalconTinymceExtension extends AbstractExtension
 {
     /**
-     * @var Environment $twig
-     */
-    protected $twig;
-
-    protected $config;
-
-    /**
      * Asset Base Url.
      *
      * Used to over ride the asset base url (to not use CDN for instance)
@@ -32,23 +24,15 @@ class StfalconTinymceExtension extends AbstractExtension
      */
     protected $baseUrl;
 
-    /**
-     * @var Packages
-     */
-    private $packages;
-
-    /**
-     * @param Environment $twig
-     * @param Packages    $packages
-     * @param array       $config
-     */
-    public function __construct(Environment $twig, Packages $packages, $config)
-    {
-        $this->twig = $twig;
+    public function __construct(
+        protected TwigEnvironment $twig,
+        private Packages $packages,
+        protected array $config,
+    ) {
+        $this->twig     = $twig;
         $this->packages = $packages;
-        $this->config = $config;
+        $this->config   = $config;
     }
-
 
     /**
      * Returns a list of functions to add to the existing list.
@@ -61,7 +45,7 @@ class StfalconTinymceExtension extends AbstractExtension
             'tinymce_init' => new TwigFunction(
                 'tinymce_init',
                 [$this, 'tinymceInit'],
-                ['is_safe' => ['html']]
+                ['is_safe' => ['html']],
             ),
         ];
     }
@@ -90,8 +74,8 @@ class StfalconTinymceExtension extends AbstractExtension
         // Get path to tinymce script for the jQuery version of the editor
         if ($config['tinymce_jquery']) {
             $config['jquery_script_url'] = $assets->getUrl(
-                $this->baseUrl.'bundles/stfalcontinymce/vendor/tinymce/tinymce.jquery.min.js',
-                $assetPackageName
+                $this->baseUrl . 'bundles/stfalcontinymce/vendor/tinymce/tinymce.jquery.min.js',
+                $assetPackageName,
             );
         }
 
@@ -123,10 +107,10 @@ class StfalconTinymceExtension extends AbstractExtension
 
         $config['language'] = LocaleHelper::getLanguage($config['language']);
 
-        $langDirectory = __DIR__.'/../../Resources/public/vendor/tinymce/langs/';
+        $langDirectory = __DIR__ . '/../../Resources/public/vendor/tinymce/langs/';
 
         // A language code coming from the locale may not match an existing language file
-        if (!file_exists($langDirectory.$config['language'].'.js')) {
+        if (!file_exists($langDirectory . $config['language'] . '.js')) {
             unset($config['language']);
         }
 
@@ -168,18 +152,18 @@ class StfalconTinymceExtension extends AbstractExtension
                 'file_picker_callback:$1',
                 '"paste_preprocess":$1',
             ],
-            \json_encode($config)
+            \json_encode($config),
         );
 
         return $this->twig->render(
             '@StfalconTinymce/Script/init.html.twig',
             [
-                'tinymce_config' => $tinymceConfiguration,
-                'include_jquery' => $config['include_jquery'],
-                'tinymce_jquery' => $config['tinymce_jquery'],
+                'tinymce_config'     => $tinymceConfiguration,
+                'include_jquery'     => $config['include_jquery'],
+                'tinymce_jquery'     => $config['tinymce_jquery'],
                 'asset_package_name' => $assetPackageName,
-                'base_url' => $this->baseUrl,
-            ]
+                'base_url'           => $this->baseUrl,
+            ],
         );
     }
 
@@ -207,7 +191,7 @@ class StfalconTinymceExtension extends AbstractExtension
         $url = preg_replace('/^asset\[(.+)\]$/i', '$1', $inputUrl);
 
         if ($inputUrl !== $url) {
-            return $assets->getUrl($this->baseUrl.$url);
+            return $assets->getUrl($this->baseUrl . $url);
         }
 
         return $inputUrl;
